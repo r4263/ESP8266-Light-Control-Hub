@@ -14,6 +14,7 @@
 #include <WiFiClient.h>
 #include <ESPAsyncWebServer.h>
 #include <ESPAsyncTCP.h>
+#include <ESP8266HTTPClient.h>
 
 const char* APSSID   = "ESP8266 ACCESS POINT";
 const char* APPSK   = "123456789";
@@ -29,7 +30,7 @@ bool LED1State = false, LED2State = false, LED3State = false, LED4State = false,
 WiFiClient client;
 AsyncWebServer server(80);
 
-void setup(void) {
+void setup() {
   pinMode(LED1,OUTPUT);
   pinMode(LED2,OUTPUT);
   pinMode(LED3,OUTPUT);
@@ -79,7 +80,14 @@ void setup(void) {
   }
 }
 
-void AsyncServerConnected() {    
+void serverRequested(){
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest * request) {
+  });
+}
+
+void AsyncServerConnected() { 
+  serverRequested();
+     
   server.on("/1", HTTP_GET, [](AsyncWebServerRequest * request) {
   LED1State =! LED1State;
   digitalWrite(LED1,LED1State);
@@ -337,7 +345,7 @@ void AccessPoint() {
   AsyncServer();
 }
 
-void Connected() {
+void Connected() {  
   IPconversion(StaticIP, Gateway);
   IPAddress ip( IPVector[0], IPVector[1], IPVector[2], IPVector[3] );
   IPAddress gateway( GatewayVector[0], GatewayVector[1], GatewayVector[2], GatewayVector[3] );
