@@ -3,18 +3,13 @@
 // http://<IP>/get?gway=value
 // http://<IP>/get?sip=value
 
-#define LED1 16
-#define LED2 5
-#define LED3 4
-#define LED4 0
-#define LED5 2
-
 #include <EEPROM.h>
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 #include <ESPAsyncWebServer.h>
 #include <ESPAsyncTCP.h>
 #include <ESP8266HTTPClient.h>
+#include <FS.h>
 
 const char* APSSID   = "ESP8266 ACCESS POINT";
 const char* APPSK   = "123456789";
@@ -24,24 +19,17 @@ const char* GatewayInput = "gateway";
 const char* StaticIPInput = "sip";
 char NetworkSSID[32], Password[32], Gateway[16], StaticIP[16];
 String SSIDHolder = "", PSKHolder = "", GatewayHolder = "", StaticIPHolder = "", NetworkHolder[45] = "";
-int nn = 0, IPVector[4] = {0, 0, 0, 0}, GatewayVector[4] = {0, 0, 0, 0};
-bool LED1State = false, LED2State = false, LED3State = false, LED4State = false, LED5State = false, LED6State = false, LED7State = false, LED8State = false, LED9State = false, LED10State = false;
+int nn = 0, IPVector[4] = {0, 0, 0, 0}, GatewayVector[4] = {0, 0, 0, 0}, LED[10] = {16,5,4,0,2};
+bool LEDState[10] = {0,0,0,0,0,0,0,0,0,0};
 
 WiFiClient client;
 AsyncWebServer server(80);
 
 void setup() {
-  pinMode(LED1,OUTPUT);
-  pinMode(LED2,OUTPUT);
-  pinMode(LED3,OUTPUT);
-  pinMode(LED4,OUTPUT);
-  pinMode(LED5,OUTPUT);
-  digitalWrite(LED1, LOW);
-  digitalWrite(LED2, LOW);
-  digitalWrite(LED3, LOW);
-  digitalWrite(LED4, LOW);
-  digitalWrite(LED5, LOW);  
-
+  for(int i=0;i<10;i++){
+    pinMode(LED[i],OUTPUT);
+    digitalWrite(LED[i], LOW);
+  }
     
   Serial.begin(115200);
   Serial.println("");
@@ -80,173 +68,19 @@ void setup() {
   }
 }
 
-void serverRequested(){
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest * request) {
+void AsyncServerConnected() { 
+  server.on("", HTTP_GET, [](AsyncWebServerRequest * request){
+   String ledRequest = request->url().c_str();
+   ledRequest.remove(0,1);
+   int LED = ledRequest.toInt()-1;
+   ledSet(LED);
+   request->send(200, "text/plain", "changed state");
   });
 }
 
-void AsyncServerConnected() { 
-  serverRequested();
-     
-  server.on("/1", HTTP_GET, [](AsyncWebServerRequest * request) {
-  LED1State =! LED1State;
-  digitalWrite(LED1,LED1State);
-  request->send(200, "text/plain", "changed state");
-  if(LED1State){
-    Serial.println();
-    Serial.println("Led 1 ligado");
-    Serial.println();
-  }
-  else{
-    Serial.println();
-    Serial.println("Led 1 desligado");
-    Serial.println();
-  }
-  });
-
-  server.on("/2", HTTP_GET, [](AsyncWebServerRequest * request) {
-    LED2State =! LED2State;
-  digitalWrite(LED2,LED2State);
-  request->send(200, "text/plain", "changed state");
-  if(LED2State){
-    Serial.println();
-    Serial.println("Led 2 ligado");
-    Serial.println();
-  }
-  else{
-    Serial.println();
-    Serial.println("Led 2 desligado");
-    Serial.println();
-  }
-  });
-
-  server.on("/3", HTTP_GET, [](AsyncWebServerRequest * request) {
-    LED3State =! LED3State;
-    digitalWrite(LED3,LED3State);
-    request->send(200, "text/plain", "changed state");
-    if(LED2State){
-      Serial.println();
-      Serial.println("Led 3 ligado");
-      Serial.println();
-    }
-  else{
-    Serial.println();
-    Serial.println("Led 3 desligado");
-    Serial.println();
-  }
-  });
-
-  server.on("/4", HTTP_GET, [](AsyncWebServerRequest * request) {
-    LED4State =! LED4State;
-    digitalWrite(LED4,LED4State);
-    request->send(200, "text/plain", "changed state");
-    if(LED4State){
-      Serial.println();
-      Serial.println("Led 4 ligado");
-      Serial.println();
-    }
-  else{
-    Serial.println();
-    Serial.println("Led 4 desligado");
-    Serial.println();
-  }
-  });
-
-  server.on("/5", HTTP_GET, [](AsyncWebServerRequest * request) {
-    LED5State =! LED5State;
-    digitalWrite(LED5,LED5State);
-    request->send(200, "text/plain", "changed state");
-    if(LED5State){
-      Serial.println();
-      Serial.println("Led 3 ligado");
-      Serial.println();
-    }
-  else{
-    Serial.println();
-    Serial.println("Led 3 desligado");
-    Serial.println();
-  }
-  });
-
-  server.on("/6", HTTP_GET, [](AsyncWebServerRequest * request) {
-    LED6State =! LED6State;
-    digitalWrite(LED5,LED6State);
-    request->send(200, "text/plain", "changed state");
-    if(LED5State){
-      Serial.println();
-      Serial.println("Led 3 ligado");
-      Serial.println();
-    }
-  else{
-    Serial.println();
-    Serial.println("Led 3 desligado");
-    Serial.println();
-  }
-  });
-
-  server.on("/7", HTTP_GET, [](AsyncWebServerRequest * request) {
-    LED7State =! LED7State;
-    digitalWrite(LED5,LED7State);
-    request->send(200, "text/plain", "changed state");
-    if(LED5State){
-      Serial.println();
-      Serial.println("Led 3 ligado");
-      Serial.println();
-    }
-  else{
-    Serial.println();
-    Serial.println("Led 3 desligado");
-    Serial.println();
-  }
-  });
-
-  server.on("/8", HTTP_GET, [](AsyncWebServerRequest * request) {
-    LED8State =! LED8State;
-    digitalWrite(LED5,LED8State);
-    request->send(200, "text/plain", "changed state");
-    if(LED5State){
-      Serial.println();
-      Serial.println("Led 3 ligado");
-      Serial.println();
-    }
-  else{
-    Serial.println();
-    Serial.println("Led 3 desligado");
-    Serial.println();
-  }
-  });
-
-  server.on("/9", HTTP_GET, [](AsyncWebServerRequest * request) {
-    LED9State =! LED9State;
-    digitalWrite(LED5,LED9State);
-    request->send(200, "text/plain", "changed state");
-    if(LED5State){
-      Serial.println();
-      Serial.println("Led 3 ligado");
-      Serial.println();
-    }
-  else{
-    Serial.println();
-    Serial.println("Led 3 desligado");
-    Serial.println();
-  }
-  });
-
-  server.on("/10", HTTP_GET, [](AsyncWebServerRequest * request) {
-    LED10State =! LED10State;
-    digitalWrite(LED5,LED10State);
-    request->send(200, "text/plain", "changed state");
-    if(LED5State){
-      Serial.println();
-      Serial.println("Led 3 ligado");
-      Serial.println();
-    }
-  else{
-    Serial.println();
-    Serial.println("Led 3 desligado");
-    Serial.println();
-  }
-  });
+void ledSet(int ledNumber){
+  LEDState[ledNumber] =! LEDState[ledNumber];
+  digitalWrite(LED[ledNumber],LEDState[ledNumber]);
 }
 
 void AsyncServer() {
@@ -306,7 +140,6 @@ void AsyncServer() {
       inputParam = "";
     }
     Serial.println("");
-    Serial.println(inputMessage);
     Serial.print("SSIDHolder: "); Serial.println(SSIDHolder);
     Serial.print("PSKHolder: "); Serial.println(PSKHolder);
     Serial.print("GatewayHolder: "); Serial.println(GatewayHolder);
@@ -319,7 +152,6 @@ void AsyncServer() {
   
   server.on("/save", HTTP_GET, [](AsyncWebServerRequest * request) {
     saveCredentials();
-    loadCredentials();
     request->send(200, "text/plain", "Saved Credentials!");
   });
 
@@ -355,7 +187,7 @@ void Connected() {
   Serial.println("");
   Serial.print("WiFi connection Successful to: "); Serial.println(NetworkSSID);
   Serial.print("The IP Address of ESP8266 Module is: ");
-  Serial.print(WiFi.localIP());
+  Serial.println(WiFi.localIP());
   server.begin();
   AsyncServerConnected();
 }
